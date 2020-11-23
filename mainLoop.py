@@ -19,6 +19,7 @@ from capture import capture, pawnToKing, printBoard, ptListPrintStr
 
 def printHi():
     print("hi")
+    print("wazzup")
     print("bye")
     return
 
