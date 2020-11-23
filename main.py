@@ -1,11 +1,13 @@
 import csv
 from time import perf_counter
+from sys import argv
 # ***********************************
 from mainLoop import playGame
 # ***********************************
 
 #test 20 times to start (later 50?)
 numTrials = 50
+
 totalTestingTime = 0.0
 numMMWins = 0
 numRandWins = 0
@@ -15,6 +17,63 @@ avgAvgRandTime = 0.0
 avgAvgMMTime = 0.0
 avgNumMoves = 0
 wasErrorAllTests = False
+
+
+# *****Command Line Arguments******
+normalMode = False
+valueBlack = "na"
+valueRed = "na"
+if len(argv) == 3:
+    normalMode = True
+    if str(argv[1]).upper() == "A":
+        valueBlack = "A"
+    elif str(argv[1]).upper() == "B":
+        valueBlack = "B"
+    elif str(argv[1]).upper() == "C":
+        valueBlack = "C"
+    elif str(argv[1]).upper() == "D":
+        valueBlack = "D"
+    else:
+        # E
+        valueBlack = "E"
+
+    if str(argv[2]).upper() == "A":
+        valueRed = "A"
+    elif str(argv[2]).upper() == "B":
+        valueRed = "B"
+    elif str(argv[2]).upper() == "C":
+        valueRed = "C"
+    elif str(argv[2]).upper() == "D":
+        valueRed = "D"
+    else:
+        # E
+        valueRed = "E"
+if len(argv) == 2:
+    if str(argv[1]).upper() == "A":
+        valueRed = "A"
+    elif str(argv[1]).upper() == "B":
+        valueRed = "B"
+    elif str(argv[1]).upper() == "C":
+        valueRed = "C"
+    elif str(argv[1]).upper() == "D":
+        valueRed = "D"
+    else:
+        # E
+        valueRed = "E"
+
+
+# *********************************
+
+if normalMode == True:
+    print("*** Using Normal AI ***")
+    print(f"*** Black: Value Function {valueBlack} ***")
+    print(f"*** Red: Value Function {valueRed} ***")
+else:
+    print("*** Using Random AI ***")
+
+
+
+
 
 # main test file (each individual entry)
 with open("Rand_VS_Minimax_Test_Main.csv", "w") as mainFile:
@@ -33,7 +92,7 @@ for i in range(1, numTrials + 1):
     gameStartTime = perf_counter()
 
     # (totalRandTime, totalMinimaxTime, winner, moveCount, wasError)
-    results = playGame()
+    results = playGame(normalMode, valueBlack, valueRed)
 
     # end game time
     gameStopTime = perf_counter()
@@ -100,7 +159,7 @@ avgAvgMMTime = avgAvgMMTime / numTrials
 avgNumMoves = avgNumMoves / numTrials
 
 # overall test results file
-with open("Rand_VS_Minimax_Test_Overall", "a") as file:
+with open("Rand_VS_Minimax_Test_Overall.csv", "a") as file:
     fileStream = csv.writer(file)
     fields = ["# Trials", "# Minimax Wins", "# Random Wins", "# Draws", "Average # Moves",
               "Average Average Random Move Time", "Average Average Minimax Move Time", "Average Game Time",

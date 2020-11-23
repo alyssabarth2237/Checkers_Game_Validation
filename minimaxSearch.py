@@ -746,6 +746,324 @@ class Node:
         return
 
 
+class NodeAdjustable(Node):
+    def __init__(self, parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, prevMoveMax, prevPrevMoveMax,
+                 prevMoveMin, prevPrevMoveMin, repeatingMovesMax, repeatingMovesMin, maxColorIn, valTypeIn):
+        super().__init__(parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, prevMoveMax, prevPrevMoveMax,
+                 prevMoveMin, prevPrevMoveMin, repeatingMovesMax, repeatingMovesMin, maxColorIn)
+        self.valType = valTypeIn
+
+    def valFunction(self):
+        # 5 Different Iterations of Value Function (A, B, C, D, and E):
+        # A:
+        # Number of pieces, edge pieces, first row, last row, number of kings, full first row
+        # All weights the same with number of pieces
+
+        # B:
+        # same but change weights with number of pieces
+
+        # C:
+        # add distance to opponents pieces in general
+
+        # D:
+        # add distance to most open king square
+
+        # E:
+        # add distance to most attackable piece
+        # Final Value Function with Everything
+
+
+        minTotPts = 10
+        minColorPts = 5
+
+        val = 0
+        currColor = ""
+        otherColor = ""
+        myPts = []
+        oppntPts = []
+        firstRow = -1
+        lastRow = -1
+        goalSign = 0
+        repeatBaseVal = 0
+        numMyPts = 0
+        numOppntPts = 0
+        numTotPts = 0
+        myRepeatingMoves = False
+
+        if self.type == "min":
+            currColor = "red"
+            otherColor = "black"
+            goalSign = 1
+            repeatBaseVal = alphaMin + 1
+            myRepeatingMoves = self.repeatingMovesMax
+            if redMoveDir == -1:
+                firstRow = 7
+                lastRow = 0
+            else:
+                firstRow = 0
+                lastRow = 7
+        else:
+            currColor = "black"
+            otherColor = "red"
+            goalSign = -1
+            repeatBaseVal = betaMax - 1
+            myRepeatingMoves = self.repeatingMovesMin
+            if blackMoveDir == 1:
+                firstRow = 0
+                lastRow = 7
+            else:
+                firstRow = 7
+                lastRow = 0
+
+        # handles repeating moves here
+        if myRepeatingMoves == True:
+            val = repeatBaseVal
+            return val
+
+        for x in range(rows):
+            for y in range(cols):
+                if self.boardRslt[x][y].pColor == currColor:
+                    myPts.append(Point(x, y))
+                elif self.boardRslt[x][y].pColor == otherColor:
+                    oppntPts.append(Point(x, y))
+        numMyPts = len(myPts)
+        numOppntPts = len(oppntPts)
+        numTotPts = numMyPts + numOppntPts
+
+
+        # Both Numbers of Pieces With Same Weights:
+        # shared and not reset
+        kingW = 4000  #2000
+        numReachBestKingW = 100
+
+
+        # not shared and set in if statement
+        stepsToKingW = 0  #-100
+        myEdgePtW = 0  #100
+        myFstRowW = 0  #200
+        myLstRowW = 0  #100
+        myFullFstRowW = 0 #500
+        distToOppntPtsW = 0 #?? ./
+        oppntEdgePtW = 0  # 100
+        oppntFstRowW = 0  # 200
+        oppntLstRowW = 0  # 100
+        oppntFullFstRowW = 0  # 500
+        numMyPtsW = 0  #1000
+        numOppntPtsW = 0  #1300
+
+
+        if (numMyPts > minColorPts) and (numOppntPts > minColorPts):
+            # both normal
+            # Both) number of pieces in first row
+            # Both) number of pieces in last row
+            # Both) number of edge pieces (More Weight)
+            # Both) full first row
+            stepsToKingW = -100
+            myEdgePtW = 100
+            myFstRowW = 200
+            myLstRowW = 100
+            myFullFstRowW = 500
+            distToOppntPtsW = 0 #0 because it doesn't matter for this case
+            oppntEdgePtW = myEdgePtW
+            oppntFstRowW = myFstRowW
+            oppntLstRowW = myLstRowW
+            oppntFullFstRowW = myFullFstRowW
+            numMyPtsW = 1000
+            numOppntPtsW = 1300
+
+
+        else:
+            # both colors haw few points and behave the same
+            # Both) number of edge pieces (Less Weight)
+            # Both) (Average ?) distance of pieces from current color's opponent's pieces
+            stepsToKingW = -160  # ??
+            myEdgePtW = 10
+            myFstRowW = 0  # not needed
+            myLstRowW = 0  # not needed
+            myFullFstRowW = 0  # not needed
+            distToOppntPtsW = -30  #-40
+            oppntEdgePtW = myEdgePtW
+            oppntFstRowW = myFstRowW
+            oppntLstRowW = myLstRowW
+            oppntFullFstRowW = myFullFstRowW
+            numMyPtsW = 3000
+            numOppntPtsW = 3000
+
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        if self.valType == "A":
+            # Number of pieces, edge pieces, first row, last row, number of kings, full first row
+            # All weights the same with number of pieces
+            stepsToKingW = 0
+            myEdgePtW = 100
+            myFstRowW = 200
+            myLstRowW = 100
+            myFullFstRowW = 500
+            distToOppntPtsW = 0  # 0 because it doesn't matter for this case
+            oppntEdgePtW = myEdgePtW
+            oppntFstRowW = myFstRowW
+            oppntLstRowW = myLstRowW
+            oppntFullFstRowW = myFullFstRowW
+            numMyPtsW = 1000
+            numOppntPtsW = 1300
+            #changed so it isn't used:
+            numReachBestKingW = 0
+        elif self.valType == "B":
+            # Number of pieces, edge pieces, first row, last row, number of kings, full first row
+            # same but change weights with number of pieces
+            stepsToKingW = 0
+            distToOppntPtsW = 0
+            # changed so it isn't used:
+            numReachBestKingW = 0
+        elif self.valType == "C":
+            # add distance to opponents pieces in general
+            stepsToKingW = 0
+            # changed so it isn't used:
+            numReachBestKingW = 0
+
+        # for D and E, the only difference is with the most attackable piece so no weights need to be adjusted
+        # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+        distToOppntPts = 0
+        lsDistToOppntPt = 0
+        firstRowCt = 0
+        stepsToKing = 0
+        numReachBestKing = 0
+
+        # Prev: 10, 13
+        val += (numMyPtsW * numMyPts - numOppntPtsW * numOppntPts) * goalSign
+
+        # bestKingSqr(lastRow, currColor, otherColor)
+        kingSqr = self.bestKingSqr(lastRow, currColor, otherColor)
+
+        for pt in myPts:
+            # edge pieces
+            if (pt.x == 0) or (pt.x == 7):
+                val += myEdgePtW * goalSign
+            # first row
+            if pt.y == firstRow:
+                val += myFstRowW * goalSign
+                firstRowCt += 1
+            # last row
+            if pt.y == lastRow:
+                val += myLstRowW * goalSign
+            if self.boardRslt[pt.x][pt.y].type == "king":
+                val += kingW * goalSign
+                numReachBestKing += 1
+            else:
+                stepsToKing += (lastRow - pt.y)
+                reachable = self.canReachKingSqr(pt, kingSqr, lastRow)
+                if reachable:
+                    numReachBestKing += 1
+            # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+            if self.valType != "E":
+                # **************  Comment Out:  ****************** @@@
+                if distToOppntPtsW > 0:
+                    # find shortest distance for this piece to one of oppnts pieces
+                    shortestDist = 1000
+                    for oppntPt in oppntPts:
+                        # get x and y distances
+                        xDiff = abs(oppntPt.x - pt.x)
+                        if xDiff > 0:
+                            xDiff = xDiff - 1
+                        yDiff = abs(oppntPt.y - pt.y)
+                        if yDiff > 0:
+                            yDiff = yDiff - 1
+
+                        dist = max(xDiff, yDiff)
+                        shortestDist = min(shortestDist, dist)
+                    if self.boardRslt[pt.x][pt.y].type != "king":
+                        distToOppntPts += shortestDist
+                    else:
+                        distToOppntPts += 2 * shortestDist
+                    lsDistToOppntPt = max(lsDistToOppntPt, shortestDist)
+                # ***************  Comment Out (Above)  **************** @@@
+            else:
+                if distToOppntPtsW > 0:
+                    # find shortest distance for this piece to most attackable piece
+                    mAPt = self.mostAttackablePiece(currColor, otherColor, myPts, oppntPts)
+                    shortestDist = 1000
+                    xDiff = abs(mAPt.x - pt.x) - 1
+                    yDiff = abs(mAPt.y - pt.y) - 1
+                    dist = max(xDiff, yDiff)
+                    shortestDist = min(shortestDist, dist)
+                    distToOppntPts += shortestDist
+                    lsDistToOppntPt = max(lsDistToOppntPt, shortestDist)
+
+            # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+        if numOppntPts > 3:
+            val += distToOppntPtsW * distToOppntPts
+        else:
+            val += distToOppntPtsW *lsDistToOppntPt * numMyPts
+
+        val += stepsToKing * stepsToKingW * goalSign
+        val += numReachBestKing * numReachBestKingW * goalSign
+        if firstRowCt == 4:
+            # full first row
+            val += myFullFstRowW * goalSign
+
+        distToOppntPts = 0
+        lsDistToOppntPt = 0
+        firstRowCt = 0
+        stepsToKing = 0
+        numReachBestKing = 0
+
+        # bestKingSqr(lastRow, currColor, otherColor)
+        kingSqr = self.bestKingSqr(firstRow, otherColor, currColor)
+
+        for pt in oppntPts:
+            # edge pieces
+            if (pt.x == 0) or (pt.x == 7):
+                val += (-1) * oppntEdgePtW * goalSign
+            # first row
+            if pt.y == lastRow:
+                val += (-1) * oppntLstRowW * goalSign
+                firstRowCt += 1
+            # last row
+            if pt.y == firstRow:
+                val += (-1) * oppntFstRowW * goalSign
+            if self.boardRslt[pt.x][pt.y].type == "king":
+                val += (-1) * kingW * goalSign
+                numReachBestKing += 1
+            else:
+                stepsToKing += (firstRow - pt.y)
+                reachable = self.canReachKingSqr(pt, kingSqr, firstRow)
+                if reachable:
+                    numReachBestKing += 1
+            if distToOppntPtsW > 0:
+                # find shortest distance for this piece to one of oppnts pieces
+                shortestDist = 1000
+                for myPt in myPts:
+                    # get x and y distances
+                    xDiff = abs(myPt.x - pt.x)
+                    if xDiff > 0:
+                        xDiff = xDiff - 1
+                    yDiff = abs(myPt.y - pt.y)
+                    if yDiff > 0:
+                        yDiff = yDiff - 1
+
+                    dist = max(xDiff, yDiff)
+                    shortestDist = min(shortestDist, dist)
+                if self.boardRslt[pt.x][pt.y].type != "king":
+                    distToOppntPts += shortestDist
+                else:
+                    distToOppntPts += 2 * shortestDist
+                lsDistToOppntPt = max(lsDistToOppntPt, shortestDist)
+        if numOppntPts > 3:
+            val += (-1) * distToOppntPtsW * distToOppntPts
+        else:
+            val += (-1) * distToOppntPtsW *lsDistToOppntPt * numMyPts
+
+        val += stepsToKing * (-1) * stepsToKingW * goalSign
+        val += numReachBestKing * numReachBestKingW * goalSign
+        if firstRowCt == 4:
+            # full first row
+            val += (-1) * oppntFullFstRowW * goalSign
+
+
+        return val
+
+
 class Tree:
     # def __init__(self, boardIn, prevMove, prevPrevMove):
     def __init__(self, boardIn, prevMoveMax, prevPrevMoveMax, prevMoveMin, prevPrevMoveMin, maxColor):
@@ -792,7 +1110,6 @@ class Tree:
         #returns nothing (not needed)
         return
 
-    #FIXME: CHECK IF CORRECT (FIXED)
     def levelOrderPrint(self):
         queue = []
         currLevel = -1
@@ -816,6 +1133,21 @@ class Tree:
         del self.currNode
         del self.tree
         return
+
+class TreeAdjustable(Tree):
+    def __init__(self, boardIn, prevMoveMax, prevPrevMoveMax, prevMoveMin, prevPrevMoveMin, maxColor, valueTypeIn):
+        self.valueType = valueTypeIn
+        self.tree = Array()
+        self.rootInd = 0
+        self.nextAvailInd = 1
+        # make tree here
+        dummyPt = Point(-1, -1)
+        # parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, treeIn
+        self.tree.add(0, NodeAdjustable(-1, 0, 0, "max", dummyPt, [dummyPt], boardIn, prevMoveMax, prevPrevMoveMax, prevMoveMin,
+                              prevPrevMoveMin, False, False, maxColor, valueTypeIn))
+        self.currInd = 0
+        self.currNode = self.tree.index(0)
+
 
 
 

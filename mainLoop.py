@@ -7,7 +7,7 @@ from config import rows, cols, redMoveDir, blackMoveDir, moveLimit, moveRate
 from point import Point
 from gamePiece import GamePiece, Pawn
 from referee import Referee
-from minimaxSearch import Tree, minimax, alphaMin, betaMax, randomMove
+from minimaxSearch import Tree, minimax, alphaMin, betaMax, randomMove, TreeAdjustable
 from capture import capture, pawnToKing, printBoard, ptListPrintStr
 #******************************
 
@@ -23,7 +23,10 @@ def printHi():
     print("bye")
     return
 
-def playGame(normalMode=True):
+def playGame(normalMode, valueBlack, valueRed):
+    if valueRed == "na":
+        valueRed = "E"
+
     totalRandTime = 0.0
     totalMinimaxTime = 0.0
     wasError = False
@@ -44,20 +47,6 @@ def playGame(normalMode=True):
     prevPrevMoveA = dummyMove
     prevMoveB = dummyMove
     prevPrevMoveB = dummyMove
-
-
-    # # *****Command Line Arguments******
-    # normalMode = True
-    # if len(argv) == 2:
-    #     if str(argv[1]) == "random":
-    #         normalMode = False
-    #
-    # # *********************************
-    #
-    # if normalMode == True:
-    #     print("*** Using Normal AI ***")
-    # else:
-    #     print("*** Using Random AI ***")
 
 
     # *** initialize board ***
@@ -125,11 +114,26 @@ def playGame(normalMode=True):
         # ** Timing
         randStart = perf_counter()
 
-        tree = Tree(pieceGrid, prevMoveA, prevPrevMoveA, prevMoveB, prevPrevMoveB, "black")
-        alpha = alphaMin
-        beta = betaMax
         bestTup = (0, 0, 0)  # garbage init
-        bestTup = randomMove(tree)
+        tree = []
+        if normalMode == True:
+            tree = TreeAdjustable(pieceGrid, prevMoveA, prevPrevMoveA, prevMoveB, prevPrevMoveB, "black", valueBlack)
+            alpha = alphaMin
+            beta = betaMax
+            print("   Calling Minimax...")
+            bestTup = minimax(tree.rootInd, tree, alpha, beta)
+        else:
+            tree = Tree(pieceGrid, prevMoveA, prevPrevMoveA, prevMoveB, prevPrevMoveB, "black")
+            alpha = alphaMin
+            beta = betaMax
+            print("   Calling Random...")
+            bestTup = randomMove(tree)
+
+        # tree = Tree(pieceGrid, prevMoveA, prevPrevMoveA, prevMoveB, prevPrevMoveB, "black")
+        # alpha = alphaMin
+        # beta = betaMax
+        # bestTup = (0, 0, 0)  # garbage init
+        # bestTup = randomMove(tree)
 
         # ** Timing
         randFinish = perf_counter()
@@ -145,7 +149,7 @@ def playGame(normalMode=True):
         collect()
         blackPiecePt = bestTup[0]
         blackEndPts = bestTup[1]
-        # print(f"Black Move Value: {bestTup[2]}")
+        print(f"Black Move Value: {bestTup[2]}")
         if isinstance(blackEndPts[0], int):
             print(" ***********************************   Error WITH MINIMAX HERE")
             print(f"blackPiecePt: {blackPiecePt.printStr()}")
@@ -154,8 +158,8 @@ def playGame(normalMode=True):
             print(f"Black Move Value: {bestTup[2]}")
             wasError = True
             break
-        # if blackPiecePt != Point(-1, -1):
-        #     print(f"Best Val: ( {blackPiecePt.printStr()}, {ptListPrintStr(blackEndPts)} )")
+        if blackPiecePt != Point(-1, -1):
+            print(f"Best Val: ( {blackPiecePt.printStr()}, {ptListPrintStr(blackEndPts)} )")
 
         # * moveAI Section *
 
@@ -251,8 +255,8 @@ def playGame(normalMode=True):
             break
 
         turn = "red"
-        # print(" { Red's Turn }")
-        # printBoard(pieceGrid)
+        print(" { Red's Turn }")
+        printBoard(pieceGrid)
 
 
         #***********************************************************************************************************
@@ -279,12 +283,32 @@ def playGame(normalMode=True):
         # ** Timing
         minimaxStart = perf_counter()
 
-        tree = Tree(pieceGrid, prevMoveB, prevPrevMoveB, prevMoveA, prevPrevMoveA, "red")
+        bestTup = (0, 0, 0)  # garbage init
+        tree = []
+        tree = TreeAdjustable(pieceGrid, prevMoveB, prevPrevMoveB, prevMoveA, prevPrevMoveA, "red", valueRed)
         alpha = alphaMin
         beta = betaMax
-        bestTup = (0, 0, 0)  # garbage init
-        # print("   Calling Minimax...")
+        print("   Calling Minimax...")
         bestTup = minimax(tree.rootInd, tree, alpha, beta)
+        # if normalMode == True:
+        #     tree = TreeAdjustable(pieceGrid, prevMoveB, prevPrevMoveB, prevMoveA, prevPrevMoveA, "red", valueRed)
+        #     alpha = alphaMin
+        #     beta = betaMax
+        #     print("   Calling Minimax...")
+        #     bestTup = minimax(tree.rootInd, tree, alpha, beta)
+        # else:
+        #     tree = Tree(pieceGrid, prevMoveB, prevPrevMoveB, prevMoveA, prevPrevMoveA, "red")
+        #     alpha = alphaMin
+        #     beta = betaMax
+        #     print("   Calling Minimax...")
+        #     bestTup = minimax(tree.rootInd, tree, alpha, beta)
+
+        # tree = Tree(pieceGrid, prevMoveB, prevPrevMoveB, prevMoveA, prevPrevMoveA, "red")
+        # alpha = alphaMin
+        # beta = betaMax
+        # bestTup = (0, 0, 0)  # garbage init
+        # # print("   Calling Minimax...")
+        # bestTup = minimax(tree.rootInd, tree, alpha, beta)
 
         # ** Timing
         minimaxFinish = perf_counter()
@@ -299,7 +323,7 @@ def playGame(normalMode=True):
         collect()
         redPiecePt = bestTup[0]
         redEndPts = bestTup[1]
-        # print(f"Red Move Value: {bestTup[2]}")
+        print(f"Red Move Value: {bestTup[2]}")
         if isinstance(redEndPts[0], int):
             print(" ***********************************   Error WITH MINIMAX HERE")
             print(f"redPiecePt: {redPiecePt.printStr()}")
@@ -308,8 +332,8 @@ def playGame(normalMode=True):
             print(f"Red Move Value: {bestTup[2]}")
             wasError = True
             break
-        # if redPiecePt != Point(-1, -1):
-        #     print(f"Best Val: ( {redPiecePt.printStr()}, {ptListPrintStr(redEndPts)} )")
+        if redPiecePt != Point(-1, -1):
+            print(f"Best Val: ( {redPiecePt.printStr()}, {ptListPrintStr(redEndPts)} )")
 
         # * moveAI Section *
 
@@ -404,8 +428,8 @@ def playGame(normalMode=True):
 
 
         turn = "black"
-        # print(" { Black's Turn }")
-        # printBoard(pieceGrid)
+        print(" { Black's Turn }")
+        printBoard(pieceGrid)
 
 
     return (totalRandTime, totalMinimaxTime, winner, moveCount, wasError)
