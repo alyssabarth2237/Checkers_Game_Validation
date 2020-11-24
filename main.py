@@ -76,7 +76,8 @@ else:
 
 
 # main test file (each individual entry)
-with open("Rand_VS_Minimax_Test_Main.csv", "w") as mainFile:
+# with open("Rand_VS_Minimax_Test_Main.csv", "w") as mainFile:
+with open("Rand_VS_ValA_Test_Main.csv", "w") as mainFile:
     mainFileStream = csv.writer(mainFile)
     # writing the headers for each field
     fields = ["Trial #", "Winner", "# Moves", "Average Random Move Time", "Average Minimax Move Time", "Total Game Time", "Error"]
@@ -126,9 +127,11 @@ for i in range(1, numTrials + 1):
     if wasError == True:
         wasErrorAllTests = True
         break
-    if winner == "minimax":
+    if winner == "red":
+        winner = "minimax"
         numMMWins += 1
-    elif winner == "random":
+    elif winner == "black":
+        winner = "random"
         numRandWins += 1
     else:
         # draw
@@ -139,11 +142,13 @@ for i in range(1, numTrials + 1):
     avgNumMoves += numMoves
 
     # write to main file trial results
-    with open("Rand_VS_Minimax_Test_Main.csv", "a") as mainFile:
+    # with open("Rand_VS_Minimax_Test_Main.csv", "a") as mainFile:
+    with open("Rand_VS_ValA_Test_Main.csv", "a") as mainFile:
         mainFileStream = csv.writer(mainFile)
         # ["Trial #", "Winner", "# Moves", "Average Random Move Time", "Average Minimax Move Time", "Total Game Time", "Error"]
         resultRow = [str(i), winner, str(numMoves), str(avgRandTime), str(avgMMTime), str(gameTime), str(wasError)]
         mainFileStream.writerow(resultRow)
+
 
 
 
@@ -159,7 +164,8 @@ avgAvgMMTime = avgAvgMMTime / numTrials
 avgNumMoves = avgNumMoves / numTrials
 
 # overall test results file
-with open("Rand_VS_Minimax_Test_Overall.csv", "a") as file:
+# with open("Rand_VS_Minimax_Test_Overall.csv", "a") as file:
+with open("Rand_VS_ValA_Test_Overall.csv", "a") as file:
     fileStream = csv.writer(file)
     fields = ["# Trials", "# Minimax Wins", "# Random Wins", "# Draws", "Average # Moves",
               "Average Average Random Move Time", "Average Average Minimax Move Time", "Average Game Time",

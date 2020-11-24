@@ -9,5 +9,5 @@ pieceGrid = [] #for locs of pieces
 #black goes first
 redMoveDir = -1
 blackMoveDir = 1
-moveLimit = 200
+moveLimit = 160
 moveRate = 3
