@@ -7,19 +7,14 @@ dummyColor = "na"
 def pawnToKing(pt, pieceGrid):
     if pieceGrid[pt.x][pt.y].type == "pawn":
         samePColor = pieceGrid[pt.x][pt.y].pColor
-
         pieceGrid[pt.x][pt.y] = GamePiece(dummyColor, pt, "na")
         pieceGrid[pt.x][pt.y] = King(samePColor, pt, pieceGrid)
-
     else:
         print(" << ERROR: pawnToKing CALLED ON KING PIECE >>")
     return
 
 
-
 def capture(blackPiecePt, endPt, pieceGrid):
-    #print("  {{{  ERROR: MUST WRITE CAPTURE FUNCTION!!!  }}}")
-
     #find middle pt
     xinc = int(endPt.x - blackPiecePt.x)
     yinc = int(endPt.y - blackPiecePt.y)

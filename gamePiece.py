@@ -48,7 +48,6 @@ class GamePiece:
 
 class Pawn(GamePiece):
     def __init__(self, pColorIn, locIn, pieceGrid):
-        #print("Pawn init Called...")
         super().__init__(pColorIn, locIn, pieceGrid)
         self.type = "pawn"
         if pColorIn == "red":
@@ -64,12 +63,10 @@ class Pawn(GamePiece):
                 self.lastRow = 0
             self.moveDir = blackMoveDir
         else:
-            #throw error
             self.lastRow = -2
             self.moveDir = -10
 
         if (self.boardCheck.isOpen(pieceGrid, self.loc) == False) or (self.boardCheck.isInvalid(self.loc) == True):
-            #throw error
             print('error')
 
 
@@ -89,11 +86,8 @@ class King(GamePiece):
             else:
                 self.lastRow = 0
         else:
-            #throw error
             self.lastRow = -2
             self.moveDir = -10
-
-        #************************
 
         if (self.boardCheck.isOpen(pieceGrid, self.loc) == False) or (self.boardCheck.isInvalid(self.loc) == True):
             # throw error

@@ -1,4 +1,4 @@
-from random import randint, seed
+from random import randint
 from copy import deepcopy
 #******************************
 from referee import Referee
@@ -6,12 +6,11 @@ from gamePiece import GamePiece
 from point import Point
 from config import rows, cols, redMoveDir, blackMoveDir
 from boardCheck import BoardCheck
-from capture import ptListPrintStr
 #******************************
 
-alphaMin = -200000000  # -2147483647
-betaMax = 200000000  # 2147483647
-dummyVal = -214748300
+alphaMin = -2147483647
+betaMax = 2147483647
+dummyVal = -2147483648
 maxDepth = 6
 ref = Referee()
 dummyMove = (Point(-1, -1), [])
@@ -26,7 +25,6 @@ class Array:
         self.array = []
         self.isAdjustable = isAdjustableIn
         for i in range(self.size):
-            #parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, prevMove, prevPrevMove, repeatingMoves):
             if isAdjustableIn:
                 self.array.append(
                     NodeAdjustable(-1, -1, -1, "max", -1, [-1], [], dummyMove, dummyMove, dummyMove, dummyMove, False, False,
@@ -40,13 +38,11 @@ class Array:
             self.array[ind] = node
         else:
             #must grow array
-            # print("Growing Array...")
             for i in range(self.size):
                 if self.isAdjustable:
                     self.array.append(
                         NodeAdjustable(-1, -1, -1, "max", -1, [-1], [], dummyMove, dummyMove, dummyMove, dummyMove,
-                                       False, False,
-                                       "None", "E"))
+                                       False, False, "None", "E"))
                 else:
                     self.array.append(
                         Node(-1, -1, -1, "max", -1, [-1], [], dummyMove, dummyMove, dummyMove, dummyMove, False, False,
@@ -112,8 +108,6 @@ class Node:
         # distance away from edges
         # surrounding square for blocking (how many openings)
         # distance from my pts
-        # FIXME: CHANGE FOR KING?
-        # whether or not it's a king? (possibly add later)
         distEdgeW = 100
         ssOpenW = 50
         distMyPtsW = -1
@@ -122,9 +116,7 @@ class Node:
         mAPtVal = 0
         for oppntPt in oppntPts:
             currVal = 0
-
             # *** distance away from edges
-
             closestDist = 100
             leftDist = oppntPt.x
             closestDist = min(closestDist, leftDist)
@@ -134,15 +126,11 @@ class Node:
             closestDist = min(closestDist, topDist)
             bottomDist = oppntPt.y
             closestDist = min(closestDist, bottomDist)
-            # FIXME: PENALTY OR WAY TO ACCOUNT FOR CORNER PIECES (more than one dist is 0)
             currVal += distEdgeW * closestDist
-
             # *** surrounding square for blocking (how many openings)
-
             # hardcode 4 corner pieces to check
             numSqrsOpen = 0
             ssQueue = []
-
             # upper left diag
             ssPt = Point(oppntPt.x - 1, oppntPt.y + 1)
             ssQueue.append(ssPt)
@@ -162,9 +150,7 @@ class Node:
                         # square is either open or has my colored piece
                         numSqrsOpen += 1
             currVal += ssOpenW * numSqrsOpen
-
             # *** distance from my pts
-
             totDist = 0
             for myPt in myPts:
                 # -1 because dist should be zero when they are next to other piece
@@ -210,20 +196,11 @@ class Node:
         else:
             allKingSqrs = [Point(0, lastRow), Point(2, lastRow), Point(4, lastRow), Point(6, lastRow)]
             moveDir = -1
-        # changed:
         kingSqrs = allKingSqrs
-        # stepsLeft = abs(lastRow - pt.y)
-        # leftKingSqr = max(allKingSqrs[0], pt.x - stepsLeft)
-        # rightKingSqr = min(allKingSqrs[-1], pt.x + stepsLeft)
-        # kingSqrs = []
-        # for sqr in allKingSqrs:
-        #     if (sqr >= leftKingSqr) and (sqr <= rightKingSqr):
-        #         kingSqrs.append(sqr)
         leftSlope = 0
         rightSlope = 0
         leftIntercept = 0
         rightIntercept = 0
-        #switched if and else
 
         # pick best king sqr
         bestKingSqr = (Point(-1, -1), -1)
@@ -278,11 +255,6 @@ class Node:
         return bestKingSqr[0]
 
     def valFunction(self):
-        # FIXME: FIX FIRST ROW, LAST ROW, AND EDGE PIECES, SO CORNER PIECES AREN'T COUNTED TWICE
-        # FIXME: CHANGING FUNCTION SO IS DIFFERENT WHEN THERE ARE FEWER PIECES ON THE BOARD
-        # Both (Same Weights):
-
-
         # Normal (Many Pieces):
         # number of pieces in first row
         # number of pieces in last row
@@ -311,7 +283,6 @@ class Node:
         numTotPts = 0
         myRepeatingMoves = False
 
-        # FIXME: HERE IS THE ERROR
         maxColor = self.maxColor
         minColor = ""
         maxMoveDir = 0
@@ -324,7 +295,6 @@ class Node:
             minColor = "red"
             maxMoveDir = blackMoveDir
             minMoveDir = redMoveDir
-        # ******************************
         if self.type == "min":
             currColor = maxColor
             otherColor = minColor
@@ -365,16 +335,10 @@ class Node:
         numOppntPts = len(oppntPts)
         numTotPts = numMyPts + numOppntPts
 
-
         # Both Numbers of Pieces With Same Weights:
-
-        # Both) number of pieces
-
         # shared and not reset
         kingW = 4000  #2000
-        # stepsToKingW = -100  # ??
         numReachBestKingW = 100
-
 
         # not shared and set in if statement
         stepsToKingW = 0  #-100
@@ -462,28 +426,6 @@ class Node:
                 reachable = self.canReachKingSqr(pt, kingSqr, lastRow)
                 if reachable:
                     numReachBestKing += 1
-            # if distToOppntPtsW > 0:
-            #     # find shortest distance for this piece to one of oppnts pieces
-            #     shortestDist = 1000
-            #     for oppntPt in oppntPts:
-            #         # get x and y distances
-            #         xDiff = abs(oppntPt.x - pt.x)
-            #         if xDiff > 0:
-            #             xDiff = xDiff - 1
-            #         yDiff = abs(oppntPt.y - pt.y)
-            #         if yDiff > 0:
-            #             yDiff = yDiff - 1
-            #
-            #         dist = max(xDiff, yDiff)
-            #         shortestDist = min(shortestDist, dist)
-            #     if self.boardRslt[pt.x][pt.y].type != "king":
-            #         distToOppntPts += shortestDist
-            #     else:
-            #         distToOppntPts += 2 * shortestDist
-            #     lsDistToOppntPt = max(lsDistToOppntPt, shortestDist)
-
-            # *******************************
-            # mostAttackablePiece(self, currColor, otherColor, myPts, oppntPts)
 
             if distToOppntPtsW > 0:
                 # find shortest distance for this piece to most attackable piece
@@ -494,12 +436,7 @@ class Node:
                 dist = max(xDiff, yDiff)
                 shortestDist = min(shortestDist, dist)
                 distToOppntPts += shortestDist
-                # if self.boardRslt[pt.x][pt.y].type != "king":
-                #     distToOppntPts += shortestDist
-                # else:
-                #     distToOppntPts += 2 * shortestDist
                 lsDistToOppntPt = max(lsDistToOppntPt, shortestDist)
-            # ********************************
 
         if numOppntPts > 3:
             val += distToOppntPtsW * distToOppntPts
@@ -570,7 +507,6 @@ class Node:
             # full first row
             val += (-1) * oppntFullFstRowW * goalSign
 
-
         return val
 
 
@@ -581,7 +517,6 @@ class Node:
             #no capture
             prevBoard[currPt.x][currPt.y].loc = endPt
             prevBoard[endPt.x][endPt.y] = prevBoard[currPt.x][currPt.y]
-            #GamePiece(pColorIn, locIn, canvasIn, pieceNumIn, pieceGrid, gameGrid)
             prevBoard[currPt.x][currPt.y] = GamePiece("na", currPt, "na")
         else:
             #capture
@@ -601,8 +536,7 @@ class Node:
             prevBoard[currPt.x][currPt.y].loc = endPt
             prevBoard[endPt.x][endPt.y] = prevBoard[currPt.x][currPt.y]
             prevBoard[currPt.x][currPt.y] = GamePiece("na", currPt, "na")
-        return  #should have modified prevBoard in function that called nextBoard but if not change to line below
-        #return prevBoard
+        return
 
     def makeChildren(self, treeInst):
         #find all red pieces on self.boardRslt
@@ -610,12 +544,6 @@ class Node:
         coloredPieces = [] #pts of the red pieces
         moves = [] #piece endPts lists pairs (all move options including all pieces)
         queue = []
-
-        # *******
-        # if not self.boardRslt:
-        #     print(f'Depth: {self.depth}')
-        #     print("howdy")
-        # *******
 
         maxColor = self.maxColor
         minColor = ""
@@ -640,17 +568,13 @@ class Node:
             prevMove = self.prevMoveMin
             prevPrevMove = self.prevPrevMoveMin
             prevRepeatingMoves = self.repeatingMovesMin
-            otherPrevMove = self.prevMoveMax
-            otherPrevPrevMove = self.prevPrevMoveMax
-            otherPrevRepeatingMoves = self.prevPrevMoveMax
+
         newDepth = self.depth + 1
         # find red or black pieces
-
         for x in range(rows):
             for y in range(cols):
                 if self.boardRslt[x][y].pColor == currColor:
                     coloredPieces.append(Point(x, y))
-
 
         #fill queue initially for each colored piece and put non jumping moves in moves
         noJumpEndPts = []
@@ -703,12 +627,6 @@ class Node:
         #now add all moves to tree
         nextPrevMove = dummyMove
         nextPrevPrevMove = dummyMove
-        # if self.depth > 0:
-        #     nextPrevMove = (self.currPt, self.endPts)
-        #     nextPrevPrevMove = prevMove
-        # else:
-        #     nextPrevMove = prevMove
-        #     nextPrevPrevMove = prevPrevMove
         for move in moves:
             # we need to keep but discourage repeating moves
             repeatingMoves = prevRepeatingMoves
@@ -716,17 +634,9 @@ class Node:
                 repeatingMoves = True
             if (move[0] == prevPrevMove[0]) and (move[1] == prevPrevMove[1]):
                 repeatingMoves = True
-            # if repeatingMoves == True:
-            #     print("** repeating moves **")
-            #     print("howdy")
             newInd = treeInst.nextAvailInd
             treeInst.nextAvailInd += 1
             self.children.append(newInd)
-            #parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, treeIn
-            # FIXME: CHANGE NODE INIT TO INCLUDE FLAG FOR REPEATING MOVES
-            #def __init__(self, parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, prevMove, prevPrevMove, repeatingMoves):
-            # nextPrevMove = (move[0], move[1])
-            # nextPrevPrevMove = prevMove
             if self.depth > 0:
                 nextPrevMove = (move[0], move[1])
                 nextPrevPrevMove = prevMove
@@ -825,7 +735,6 @@ class NodeAdjustable(Node):
         numTotPts = 0
         myRepeatingMoves = False
 
-        # FIXME: HERE IS THE ERROR
         maxColor = self.maxColor
         minColor = ""
         maxMoveDir = 0
@@ -838,7 +747,6 @@ class NodeAdjustable(Node):
             minColor = "red"
             maxMoveDir = blackMoveDir
             minMoveDir = redMoveDir
-        # ******************************
 
         if self.type == "min":
             currColor = maxColor
@@ -1110,7 +1018,6 @@ class NodeAdjustable(Node):
             # full first row
             val += (-1) * oppntFullFstRowW * goalSign
 
-
         return val
 
     def makeChildren(self, treeInst):
@@ -1119,12 +1026,6 @@ class NodeAdjustable(Node):
         coloredPieces = [] #pts of the red pieces
         moves = [] #piece endPts lists pairs (all move options including all pieces)
         queue = []
-
-        # *******
-        # if not self.boardRslt:
-        #     print(f'Depth: {self.depth}')
-        #     print("howdy")
-        # *******
 
         maxColor = self.maxColor
         minColor = ""
@@ -1149,14 +1050,13 @@ class NodeAdjustable(Node):
             prevMove = self.prevMoveMin
             prevPrevMove = self.prevPrevMoveMin
             prevRepeatingMoves = self.repeatingMovesMin
+
         newDepth = self.depth + 1
         # find red or black pieces
-
         for x in range(rows):
             for y in range(cols):
                 if self.boardRslt[x][y].pColor == currColor:
                     coloredPieces.append(Point(x, y))
-
 
         #fill queue initially for each colored piece and put non jumping moves in moves
         noJumpEndPts = []
@@ -1209,12 +1109,6 @@ class NodeAdjustable(Node):
         #now add all moves to tree
         nextPrevMove = dummyMove
         nextPrevPrevMove = dummyMove
-        # if self.depth > 0:
-        #     nextPrevMove = (self.currPt, self.endPts)
-        #     nextPrevPrevMove = prevMove
-        # else:
-        #     nextPrevMove = prevMove
-        #     nextPrevPrevMove = prevPrevMove
         for move in moves:
             # we need to keep but discourage repeating moves
             repeatingMoves = prevRepeatingMoves
@@ -1222,24 +1116,9 @@ class NodeAdjustable(Node):
                 repeatingMoves = True
             if (move[0] == prevPrevMove[0]) and (move[1] == prevPrevMove[1]):
                 repeatingMoves = True
-            # if repeatingMoves == True:
-            #     print("** repeating moves **")
-            #     print(f"prevRepeatingMoves: {prevRepeatingMoves}")
-            #     print(f"move[0]: {move[0].printStr()}")
-            #     print(f"move[1]: {ptListPrintStr(move[1])}")
-            #     print(f"prevMove[0]: {prevMove[0].printStr()}")
-            #     print(f"prevMove[1]: {ptListPrintStr(prevMove[1])}")
-            #     print(f"prevPrevMove[0]: {prevPrevMove[0].printStr()}")
-            #     print(f"prevPrevMove[1]: {ptListPrintStr(prevPrevMove[1])}")
-            #     print("howdy")
             newInd = treeInst.nextAvailInd
             treeInst.nextAvailInd += 1
             self.children.append(newInd)
-            #parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, treeIn
-            # FIXME: CHANGE NODE INIT TO INCLUDE FLAG FOR REPEATING MOVES
-            #def __init__(self, parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, prevMove, prevPrevMove, repeatingMoves):
-            # nextPrevMove = (move[0], move[1])
-            # nextPrevPrevMove = prevMove
             if self.depth > 0:
                 nextPrevMove = (move[0], move[1])
                 nextPrevPrevMove = prevMove
@@ -1273,49 +1152,33 @@ class NodeAdjustable(Node):
 
 
 class Tree:
-    # def __init__(self, boardIn, prevMove, prevPrevMove):
     def __init__(self, boardIn, prevMoveMax, prevPrevMoveMax, prevMoveMin, prevPrevMoveMin, maxColor):
         self.tree = Array()
         self.rootInd = 0
         self.nextAvailInd = 1
-        #make tree here
         dummyPt = Point(-1, -1)
-        #parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, treeIn
         self.tree.add(0, Node(-1, 0, 0, "max", dummyPt, [dummyPt], boardIn, prevMoveMax, prevPrevMoveMax, prevMoveMin, prevPrevMoveMin, False, False, maxColor))
-        #self.tree.reverse()
         self.currInd = 0
         self.currNode = self.tree.index(0)
 
     def visit(self, ind):
         #function for indexing node
 
-
         #set currInd
         self.currInd = ind
         #make children if not visited before
         self.currNode = self.tree.index(self.currInd)
         if self.currNode.visited == False:
-            #FIXME: MAKE CHILDREN HERE
-
-            #*****************
             if self.currNode.depth < maxDepth:
-                # ***********
-                if self.currNode.depth == -1:
-                    print("self.currNode.depth is -1")
-                    print("howdy")
-                # ***********
                 self.currNode.makeChildren(self)
                 if not self.currNode.children:
                     self.currNode.val = self.currNode.valFunction()
             else:
-                # FIXME: write function
                 self.currNode.val = self.currNode.valFunction()
-            # *****************
             #must make children and set currNode again after children have been made
             self.currNode = self.tree.index(self.currInd)
             self.currNode.visited = True
 
-        #returns nothing (not needed)
         return
 
     def levelOrderPrint(self):
@@ -1348,30 +1211,17 @@ class TreeAdjustable(Tree):
         self.tree = Array(True)
         self.rootInd = 0
         self.nextAvailInd = 1
-        # make tree here
         dummyPt = Point(-1, -1)
-        # parentIndIn, indIn, depthIn, typeIn, currPtIn, endPtsIn, boardIn, treeIn
         self.tree.add(0, NodeAdjustable(-1, 0, 0, "max", dummyPt, [dummyPt], boardIn, prevMoveMax, prevPrevMoveMax, prevMoveMin,
                               prevPrevMoveMin, False, False, maxColor, valueTypeIn))
         self.currInd = 0
         self.currNode = self.tree.index(0)
 
 
-
-
-# Minimax algorithm with alpha-beta pruning code borrowed from geeksforgeeks.org
-#changed to match my game tree
-# code on website written by Rituraj Jain
-# link: https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning/
-#FIXME: CHECK IF CORRECT (FIXED)
-#FIXME: MUST CHANGE SO USES VISIT AND NODE INFORMATION IS ACCESSED FROM WITHIN THE TREE CLASS
-#FIXME: CONVERT TREE ARRAY TO TREE CLASS
-#FIXME: PASS IN NODE INDEX INSTEAD OF FULL NODE
 def minimax(nodeInd, tree, alpha, beta):
-    # **********
     tree.visit(nodeInd)
     node = tree.currNode
-    # **********
+
     best = dummyVal
     bestCurrPt = Point(dummyVal, dummyVal)
     bestEndPts = [dummyVal]
@@ -1381,6 +1231,10 @@ def minimax(nodeInd, tree, alpha, beta):
         return (node.currPt, node.endPts, node.val)
 
     if node.type == "max":
+        if (node.depth > 0) and (node.repeatingMovesMax == True):
+            best = betaMax - 1
+            return (node.currPt, node.endPts, best)
+
         best = alphaMin
         #call on each child
         for childInd in node.children:
@@ -1401,6 +1255,9 @@ def minimax(nodeInd, tree, alpha, beta):
                 break
 
     else:
+        if (node.depth > 0) and (node.repeatingMovesMin == True):
+            best = alphaMin + 1
+            return (node.currPt, node.endPts, best)
         best = betaMax
         #call on each child
         for childInd in node.children:
@@ -1423,16 +1280,9 @@ def minimax(nodeInd, tree, alpha, beta):
     returnTup = (Point(dummyVal, dummyVal), [dummyVal], dummyVal)
     if node.depth > 0:
         # flip repeating moves values
-        #if (node.type == "max") and (best == )
         if best == (alphaMin + 1):
             best = betaMax - 1
         elif best == (betaMax - 1):
-            best = alphaMin + 1
-
-        #this is what actually matters:
-        if (node.type == "max") and (node.repeatingMovesMax == True):
-            best = betaMax - 1
-        elif (node.type == "min") and (node.repeatingMovesMin == True):
             best = alphaMin + 1
 
         returnTup = (node.currPt, node.endPts, best)
@@ -1441,9 +1291,7 @@ def minimax(nodeInd, tree, alpha, beta):
     return returnTup
 
 
-# *Here*
 # Random Player Function
-#def minimax(nodeInd, tree, alpha, beta):
 def randomMove(tree):
     tree.visit(tree.rootInd)
     ind = -1

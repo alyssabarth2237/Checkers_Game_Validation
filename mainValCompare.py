@@ -5,7 +5,8 @@ from mainLoop import playGame
 # ***********************************
 
 #test pair twice with each starting first once
-valList = ["A", "B", "C", "D", "E"]
+#valList = ["A", "B", "C", "D", "E"]
+valPairList = [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E")]
 
 totalTestingTime = 0.0
 avgGameTime = 0.0
@@ -32,99 +33,100 @@ print("Starting Testing...")
 
 testStartTime = perf_counter()
 
-# FIXME: FIRST PLAY GAME WITH ONE ORDER AND THEN SWITCH
+# for valI in valList:
+#     for valJ in valList:
+for valPair in valPairList:
+    valI = valPair[0]
+    valJ = valPair[1]
+    if ((valI, valJ) not in prevValPairs) and (valI != valJ):
+        prevValPairs.append((valI, valJ))
+        valStrBlack = f"Val {valI}"
+        valStrRed = f"Val {valJ}"
 
-for valI in valList:
-    for valJ in valList:
-        if ((valI, valJ) not in prevValPairs) and (valI != valJ):
-            prevValPairs.append((valI, valJ))
-            valStrBlack = f"Val {valI}"
-            valStrRed = f"Val {valJ}"
+        # start game time
+        gameStartTime = perf_counter()
 
-            # start game time
-            gameStartTime = perf_counter()
+        # (totalRandTime, totalMinimaxTime, winner, moveCount, wasError, numLeftBlack, numLeftRed)
+        results = playGame(normalMode, valI, valJ)
 
-            # (totalRandTime, totalMinimaxTime, winner, moveCount, wasError, numLeftBlack, numLeftRed)
-            results = playGame(normalMode, valI, valJ)
+        # end game time
+        gameStopTime = perf_counter()
 
-            # end game time
-            gameStopTime = perf_counter()
+        gameTime = gameStopTime - gameStartTime
 
-            gameTime = gameStopTime - gameStartTime
+        winner = results[2]
+        moveCount = results[3]
+        wasError = results[4]
+        numLeftBlack = results[5]
+        numLeftRed = results[6]
 
-            winner = results[2]
-            moveCount = results[3]
-            wasError = results[4]
-            numLeftBlack = results[5]
-            numLeftRed = results[6]
+        numMoves = moveCount
+        if (numMoves % 2) == 0:
+            numMoves = numMoves // 2
+        else:
+            numMoves = (numMoves + 1) // 2
 
-            numMoves = moveCount
-            if (numMoves % 2) == 0:
-                numMoves = numMoves // 2
-            else:
-                numMoves = (numMoves + 1) // 2
+        if wasError == True:
+            wasErrorAllTests = True
+            break
+        if winner == "black":
+            winner = valStrBlack
+        elif winner == "red":
+            winner = valStrRed
+        avgGameTime += gameTime
+        avgNumMoves += numMoves
 
-            if wasError == True:
-                wasErrorAllTests = True
-                break
-            if winner == "black":
-                winner = valStrBlack
-            elif winner == "red":
-                winner = valStrRed
-            avgGameTime += gameTime
-            avgNumMoves += numMoves
+        # write to main file trial results
+        with open("Val_Vs_Val_Test_Main.csv", "a") as mainFile:
+            mainFileStream = csv.writer(mainFile)
+            # ["Trial #", "Black Val f(x)", "Red Val f(x)", "Winner", "# Black Left", "# Red Left", "# Moves", "Total Game Time", "Error"]
+            resultRow = [str(trialNum), valStrBlack, valStrRed, winner, str(numLeftBlack), str(numLeftRed), str(numMoves), str(gameTime), str(wasError)]
+            mainFileStream.writerow(resultRow)
+        trialNum += 1
 
-            # write to main file trial results
-            with open("Val_Vs_Val_Test_Main.csv", "a") as mainFile:
-                mainFileStream = csv.writer(mainFile)
-                # ["Trial #", "Black Val f(x)", "Red Val f(x)", "Winner", "# Black Left", "# Red Left", "# Moves", "Total Game Time", "Error"]
-                resultRow = [str(trialNum), valStrBlack, valStrRed, winner, str(numLeftBlack), str(numLeftRed), str(numMoves), str(gameTime), str(wasError)]
-                mainFileStream.writerow(resultRow)
-            trialNum += 1
+        # *********** Now Flip the Pair ****************
 
-            # *********** Now Flip the Pair ****************
+        valStrBlack = f"Val {valJ}"
+        valStrRed = f"Val {valI}"
 
-            valStrBlack = f"Val {valJ}"
-            valStrRed = f"Val {valI}"
+        # start game time
+        gameStartTime = perf_counter()
 
-            # start game time
-            gameStartTime = perf_counter()
+        # (totalRandTime, totalMinimaxTime, winner, moveCount, wasError)
+        results = playGame(normalMode, valJ, valI)
 
-            # (totalRandTime, totalMinimaxTime, winner, moveCount, wasError)
-            results = playGame(normalMode, valJ, valI)
+        # end game time
+        gameStopTime = perf_counter()
 
-            # end game time
-            gameStopTime = perf_counter()
+        gameTime = gameStopTime - gameStartTime
 
-            gameTime = gameStopTime - gameStartTime
+        winner = results[2]
+        moveCount = results[3]
+        wasError = results[4]
 
-            winner = results[2]
-            moveCount = results[3]
-            wasError = results[4]
+        numMoves = moveCount
+        if (numMoves % 2) == 0:
+            numMoves = numMoves // 2
+        else:
+            numMoves = (numMoves + 1) // 2
 
-            numMoves = moveCount
-            if (numMoves % 2) == 0:
-                numMoves = numMoves // 2
-            else:
-                numMoves = (numMoves + 1) // 2
+        if wasError == True:
+            wasErrorAllTests = True
+            break
+        if winner == "black":
+            winner = valStrBlack
+        elif winner == "red":
+            winner = valStrRed
+        avgGameTime += gameTime
+        avgNumMoves += numMoves
 
-            if wasError == True:
-                wasErrorAllTests = True
-                break
-            if winner == "black":
-                winner = valStrBlack
-            elif winner == "red":
-                winner = valStrRed
-            avgGameTime += gameTime
-            avgNumMoves += numMoves
-
-            # write to main file trial results
-            with open("Val_Vs_Val_Test_Main.csv", "a") as mainFile:
-                mainFileStream = csv.writer(mainFile)
-                # ["Trial #", "Black Val f(x)", "Red Val f(x)", "Winner", "# Moves", "Total Game Time", "Error"]
-                resultRow = [str(trialNum), valStrBlack, valStrRed, winner, str(numMoves), str(gameTime), str(wasError)]
-                mainFileStream.writerow(resultRow)
-            trialNum += 1
+        # write to main file trial results
+        with open("Val_Vs_Val_Test_Main.csv", "a") as mainFile:
+            mainFileStream = csv.writer(mainFile)
+            # ["Trial #", "Black Val f(x)", "Red Val f(x)", "Winner", "# Moves", "Total Game Time", "Error"]
+            resultRow = [str(trialNum), valStrBlack, valStrRed, winner, str(numMoves), str(gameTime), str(wasError)]
+            mainFileStream.writerow(resultRow)
+        trialNum += 1
 
 
 

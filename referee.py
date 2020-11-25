@@ -19,12 +19,9 @@ class Referee:
 
     def canMove(self, currPt, endPt, pieceGrid):
         moveAllowed = False
-        #FIXME: CHANGE TO ONLY PAWN AND NOT BOTH PAWN AND VIRTUAL LATER
         if (isinstance(pieceGrid[currPt.x][currPt.y], Pawn)) or (pieceGrid[currPt.x][currPt.y].type == "virtual"):
             #can only move forward
-
             #check if endPt is off the board (second check)
-            #FIXME: Take Out Second isInvalid Check
             if (self.boardCheck.isInvalid(endPt) == True):
                 return False
             #check if endPt is in front of current square according to move dir and that only off by on for x
@@ -52,7 +49,6 @@ class Referee:
         return moveAllowed
 
     def canJump(self, currPt, endPt, pieceGrid):
-        #TODO: FULLY WRITE FUNCTION
         # check if endPt is occupied by same color
         if (self.isOpnt(currPt, endPt, pieceGrid) == False):
             return (False, currPt)
@@ -69,7 +65,7 @@ class Referee:
         #can make first jump
         return(True, jumpEndPt)
 
-# FIXME: MAKE SURE THAT CHANGES TO FIX FIRST JUMP ARE CORRECT
+
     def howCanMove(self, currPt, pieceGrid):
         # returns a list of possible moves (in pt form) for current piece at pt
         possibleEndPts = []
@@ -95,13 +91,10 @@ class Referee:
             if self.boardCheck.isInvalid(endPt) == False:
                 possibleEndPts.append(endPt)
 
-        # *******************************************************************
-        #           ***** Changes Here *****
         #for each check if can move and check for first jump
         for pt in possibleEndPts:
             movePossible = self.canMove(currPt, pt, pieceGrid)
             if movePossible == True:
-                # change here:
                 noJumpEndPts.append(pt)
             else:
                 #check for first jump
@@ -112,13 +105,11 @@ class Referee:
 
         # must check if endPts (jump endpoints) is empty and if so then set endPts equal to noJumpEndPts
         # if it is not empty then just return endPts with the jump endPoints only (English Standard Version)
-        # change here (this is new):
         jumpsFound = True
         if not endPts:
             # no possible jumps
             endPts = noJumpEndPts
             jumpsFound = False
-        # *******************************************************************
 
         #endPts has list of all possible first moves/jumps
         return (endPts, jumpsFound)

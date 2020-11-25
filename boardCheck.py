@@ -5,7 +5,6 @@ class BoardCheck:
         self.dummyVar = "na"
 
     def isInvalid(self, pt):
-        #print("isInvalid Called...")
         invalidPt = True
         #check x
         if (pt.x < 0) or (pt.x >= 8):
@@ -20,7 +19,6 @@ class BoardCheck:
         return invalidPt
 
     def isOpen(self, pieceGrid, endPt):
-        #print("isOpen Called...")
         if (pieceGrid[endPt.x][endPt.y].type == "None"):
             return True
         return False

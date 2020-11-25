@@ -1,13 +1,12 @@
 from copy import deepcopy
 from gc import collect
-from sys import argv
 from time import perf_counter
 #******************************
-from config import rows, cols, redMoveDir, blackMoveDir, moveLimit, moveRate
+from config import rows, cols, redMoveDir, blackMoveDir, moveLimit
 from point import Point
 from gamePiece import GamePiece, Pawn
 from referee import Referee
-from minimaxSearch import Tree, minimax, alphaMin, betaMax, randomMove, TreeAdjustable
+from minimaxSearch import Tree, minimax, alphaMin, betaMax, TreeAdjustable
 from capture import capture, pawnToKing, printBoard, ptListPrintStr
 #******************************
 
@@ -22,6 +21,9 @@ def playGame(normalMode, valueBlack, valueRed):
     if valueRed == "na":
         valueRed = "E"
 
+    print(f"Black Value F(x): {valueBlack}")
+    print(f"Red Value F(x): {valueRed}")
+
     totalRandTime = 0.0
     totalMinimaxTime = 0.0
     wasError = False
@@ -29,7 +31,6 @@ def playGame(normalMode, valueBlack, valueRed):
     numMoves = 0
     numLeftBlack = 0
     numLeftRed = 0
-
 
     # first coordinate is x and second is y
     # 0,0 is the bottom left square
@@ -45,7 +46,6 @@ def playGame(normalMode, valueBlack, valueRed):
     prevMoveB = dummyMove
     prevPrevMoveB = dummyMove
 
-
     # *** initialize board ***
 
     for x in range(cols):
@@ -56,7 +56,6 @@ def playGame(normalMode, valueBlack, valueRed):
             currColPiece.append(GamePiece(dummyColor, Point(x, (y * 2 + 1)), "na"))
 
         pieceGrid.append(currColPiece)
-
 
     #creating black pieces
     firstY = 0
@@ -84,8 +83,7 @@ def playGame(normalMode, valueBlack, valueRed):
     print("Done creating pieces...")
     turn = "black"
     print(" { Black's Turn }")
-    printBoard(pieceGrid)
-
+    # printBoard(pieceGrid)
 
     while not endGame:
 
@@ -93,20 +91,20 @@ def playGame(normalMode, valueBlack, valueRed):
         # use command line arguments for mode? (normalMode)
         # random player
 
-        prevMoveStr = "[ "
-        for pt in prevMoveA[1]:
-            prevMoveStr += pt.printStr()
-            if pt != prevMoveA[1][-1]:
-                prevMoveStr += ", "
-        prevMoveStr += " ]"
-        prevPrevMoveStr = "[ "
-        for pt in prevPrevMoveA[1]:
-            prevPrevMoveStr += pt.printStr()
-            if pt != prevPrevMoveA[1][-1]:
-                prevPrevMoveStr += ", "
-        prevPrevMoveStr += " ]"
-        print(
-            f'prevMove: {prevMoveA[0].printStr()}  {prevMoveStr}    prevPrevMove: {prevPrevMoveA[0].printStr()}  {prevPrevMoveStr}')
+        # prevMoveStr = "[ "
+        # for pt in prevMoveA[1]:
+        #     prevMoveStr += pt.printStr()
+        #     if pt != prevMoveA[1][-1]:
+        #         prevMoveStr += ", "
+        # prevMoveStr += " ]"
+        # prevPrevMoveStr = "[ "
+        # for pt in prevPrevMoveA[1]:
+        #     prevPrevMoveStr += pt.printStr()
+        #     if pt != prevPrevMoveA[1][-1]:
+        #         prevPrevMoveStr += ", "
+        # prevPrevMoveStr += " ]"
+        # print(
+        #     f'prevMove: {prevMoveA[0].printStr()}  {prevMoveStr}    prevPrevMove: {prevPrevMoveA[0].printStr()}  {prevPrevMoveStr}')
 
         # ** Timing
         randStart = perf_counter()
@@ -123,8 +121,8 @@ def playGame(normalMode, valueBlack, valueRed):
             tree = Tree(pieceGrid, deepcopy(prevMoveA), deepcopy(prevPrevMoveA), deepcopy(prevMoveB), deepcopy(prevPrevMoveB), "black")
             alpha = alphaMin
             beta = betaMax
-            # print("   Calling Random...")
-            bestTup = randomMove(tree)
+            print("   Calling Random...")
+            # bestTup = randomMove(tree)
 
         # tree = Tree(pieceGrid, prevMoveA, prevPrevMoveA, prevMoveB, prevPrevMoveB, "black")
         # alpha = alphaMin
@@ -141,12 +139,11 @@ def playGame(normalMode, valueBlack, valueRed):
         #     bestTup = minimax(tree.rootInd, tree, alpha, beta)
         # else:
         #     bestTup = randomMove(tree)
-        # FIXME: DELETES
         del tree
         collect()
         blackPiecePt = bestTup[0]
         blackEndPts = bestTup[1]
-        print(f"Black Move Value: {bestTup[2]}")
+        # print(f"Black Move Value: {bestTup[2]}")
         if isinstance(blackEndPts[0], int):
             print(" ***********************************   Error WITH MINIMAX HERE")
             print(f"blackPiecePt: {blackPiecePt.printStr()}")
@@ -155,16 +152,14 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"Black Move Value: {bestTup[2]}")
             wasError = True
             break
-        if blackPiecePt != Point(-1, -1):
-            print(f"Best Val: ( {blackPiecePt.printStr()}, {ptListPrintStr(blackEndPts)} )")
-            tempPrevMove = (blackPiecePt, deepcopy(blackEndPts))
-            print(f"tempPrevMoveTest: {tempPrevMove == (blackPiecePt, blackEndPts)}")
+        # if blackPiecePt != Point(-1, -1):
+        #     print(f"Best Val: ( {blackPiecePt.printStr()}, {ptListPrintStr(blackEndPts)} )")
+        #     tempPrevMove = (blackPiecePt, deepcopy(blackEndPts))
+        #     print(f"tempPrevMoveTest: {tempPrevMove == (blackPiecePt, blackEndPts)}")
 
         # * moveAI Section *
 
         if blackPiecePt != Point(-1, -1):
-            #FIXME: NEEDS FOR LOOP FOR EACH ENDPOINT
-            # FIXME: NEED FUNCTION TO HANDLE CAPTURES AND REMOVE PIECES
             prevPrevMoveA = prevMoveA
             prevMoveA = (blackPiecePt, deepcopy(blackEndPts))
 
@@ -199,6 +194,7 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"   *** MOVE COUNT: {numMoves}")
             printBoard(pieceGrid)
             winner = "red"
+            printBoard(pieceGrid)
             break
 
 
@@ -226,6 +222,7 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"   *** MOVE COUNT: {numMoves}")
             printBoard(pieceGrid)
             winner = "black"
+            printBoard(pieceGrid)
             break
         elif (blackCount == 0) and (redCount > 0):
             # red has won!
@@ -239,6 +236,7 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"   *** MOVE COUNT: {numMoves}")
             printBoard(pieceGrid)
             winner = "red"
+            printBoard(pieceGrid)
             break
         if moveCount == moveLimit:
             # no winner!
@@ -262,8 +260,12 @@ def playGame(normalMode, valueBlack, valueRed):
             break
 
         turn = "red"
-        print(" { Red's Turn }")
-        printBoard(pieceGrid)
+        if (moveCount % 30) == 0:
+            print(f"   *** MOVE COUNT: {moveCount}")
+            printBoard(pieceGrid)
+
+        # print(" { Red's Turn }")
+        # printBoard(pieceGrid)
 
 
         #***********************************************************************************************************
@@ -272,20 +274,20 @@ def playGame(normalMode, valueBlack, valueRed):
         # second AI (B) (Red)
         # minimax search
 
-        prevMoveStr = "[ "
-        for pt in prevMoveB[1]:
-            prevMoveStr += pt.printStr()
-            if pt != prevMoveB[1][-1]:
-                prevMoveStr += ", "
-        prevMoveStr += " ]"
-        prevPrevMoveStr = "[ "
-        for pt in prevPrevMoveB[1]:
-            prevPrevMoveStr += pt.printStr()
-            if pt != prevPrevMoveB[1][-1]:
-                prevPrevMoveStr += ", "
-        prevPrevMoveStr += " ]"
-        print(
-            f'prevMove: {prevMoveB[0].printStr()}  {prevMoveStr}    prevPrevMove: {prevPrevMoveB[0].printStr()}  {prevPrevMoveStr}')
+        # prevMoveStr = "[ "
+        # for pt in prevMoveB[1]:
+        #     prevMoveStr += pt.printStr()
+        #     if pt != prevMoveB[1][-1]:
+        #         prevMoveStr += ", "
+        # prevMoveStr += " ]"
+        # prevPrevMoveStr = "[ "
+        # for pt in prevPrevMoveB[1]:
+        #     prevPrevMoveStr += pt.printStr()
+        #     if pt != prevPrevMoveB[1][-1]:
+        #         prevPrevMoveStr += ", "
+        # prevPrevMoveStr += " ]"
+        # print(
+        #     f'prevMove: {prevMoveB[0].printStr()}  {prevMoveStr}    prevPrevMove: {prevPrevMoveB[0].printStr()}  {prevPrevMoveStr}')
 
         # ** Timing
         minimaxStart = perf_counter()
@@ -295,9 +297,8 @@ def playGame(normalMode, valueBlack, valueRed):
         tree = TreeAdjustable(pieceGrid, deepcopy(prevMoveB), deepcopy(prevPrevMoveB), deepcopy(prevMoveA), deepcopy(prevPrevMoveA), "red", valueRed)
         alpha = alphaMin
         beta = betaMax
-        print("   Calling Minimax...")
+        # print("   Calling Minimax...")
 
-        # FIXME: MAYBE HERE!!!!!!
         bestTup = minimax(tree.rootInd, tree, alpha, beta)
         # bestTup = randomMove(tree)
 
@@ -334,7 +335,7 @@ def playGame(normalMode, valueBlack, valueRed):
         collect()
         redPiecePt = bestTup[0]
         redEndPts = bestTup[1]
-        print(f"Red Move Value: {bestTup[2]}")
+        # print(f"Red Move Value: {bestTup[2]}")
         if isinstance(redEndPts[0], int):
             print(" ***********************************   Error WITH MINIMAX HERE")
             print(f"redPiecePt: {redPiecePt.printStr()}")
@@ -343,8 +344,8 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"Red Move Value: {bestTup[2]}")
             wasError = True
             break
-        if redPiecePt != Point(-1, -1):
-            print(f"Best Val: ( {redPiecePt.printStr()}, {ptListPrintStr(redEndPts)} )")
+        # if redPiecePt != Point(-1, -1):
+        #     print(f"Best Val: ( {redPiecePt.printStr()}, {ptListPrintStr(redEndPts)} )")
 
         # * moveAI Section *
 
@@ -383,6 +384,7 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"   *** MOVE COUNT: {numMoves}")
             printBoard(pieceGrid)
             winner = "black"
+            printBoard(pieceGrid)
             break
 
 
@@ -410,6 +412,7 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"   *** MOVE COUNT: {numMoves}")
             printBoard(pieceGrid)
             winner = "black"
+            printBoard(pieceGrid)
             break
         elif (blackCount == 0) and (redCount > 0):
             # red has won!
@@ -423,6 +426,7 @@ def playGame(normalMode, valueBlack, valueRed):
             print(f"   *** MOVE COUNT: {numMoves}")
             printBoard(pieceGrid)
             winner = "red"
+            printBoard(pieceGrid)
             break
         if moveCount == moveLimit:
             # no winner!
@@ -448,8 +452,12 @@ def playGame(normalMode, valueBlack, valueRed):
 
 
         turn = "black"
-        print(" { Black's Turn }")
-        printBoard(pieceGrid)
+        if (moveCount % 30) == 0:
+            print(f"   *** MOVE COUNT: {moveCount}")
+            printBoard(pieceGrid)
+
+        # print(" { Black's Turn }")
+        # printBoard(pieceGrid)
 
 
 

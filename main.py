@@ -5,7 +5,6 @@ from sys import argv
 from mainLoop import playGame
 # ***********************************
 
-#test 20 times to start (later 50?)
 numTrials = 50
 
 totalTestingTime = 0.0
@@ -60,8 +59,6 @@ if len(argv) == 2:
     else:
         # E
         valueRed = "E"
-
-
 # *********************************
 
 if normalMode == True:
@@ -70,8 +67,6 @@ if normalMode == True:
     print(f"*** Red: Value Function {valueRed} ***")
 else:
     print("*** Using Random AI ***")
-
-
 
 
 
@@ -148,8 +143,6 @@ for i in range(1, numTrials + 1):
         # ["Trial #", "Winner", "# Moves", "Average Random Move Time", "Average Minimax Move Time", "Total Game Time", "Error"]
         resultRow = [str(i), winner, str(numMoves), str(avgRandTime), str(avgMMTime), str(gameTime), str(wasError)]
         mainFileStream.writerow(resultRow)
-
-
 
 
 
